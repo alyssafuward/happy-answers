@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>What made you smile today?</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Serif+Display&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --pale-sky: #F2F8FD;
+      --mid-sky: #C8DEF0;
+      --deep-sky: #1F6FA8;
+      --white: #FFFFFF;
+      --ink: #1A1A1A;
+      --grey: #666666;
+      --rule: #D8ECF8;
+      --sun: #F88C00; /* illustration only */
+      --display: "DM Serif Display", Georgia, "Times New Roman", serif;
+      --body: "DM Sans", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    }
+    * { box-sizing: border-box; }
+    html, body { height: 100%; margin: 0; }
+    body {
+      background: var(--pale-sky);
+      color: var(--ink);
+      font-family: var(--body);
+      font-size: 1rem;
+      line-height: 1.5;
+    }
+    [hidden] { display: none !important; }
+
+    button { font: inherit; cursor: pointer; }
+    :focus-visible { outline: 3px solid var(--deep-sky); outline-offset: 3px; }
+
+    .btn {
+      border-radius: 999px;
+      padding: 0.8rem 1.6rem;
+      font-weight: 600;
+      border: 2px solid var(--deep-sky);
+      transition: background 0.15s ease, transform 0.1s ease;
+    }
+    .btn:active { transform: scale(0.98); }
+    .btn-primary { background: var(--deep-sky); color: var(--white); }
+    .btn-primary:hover { background: #185a89; }
+    .btn-primary:disabled { opacity: 0.6; cursor: default; }
+    .btn-ghost { background: rgba(255,255,255,0.7); color: var(--deep-sky); }
+    .btn-ghost:hover { background: var(--white); }
+
+    /* ---------- Submit view ---------- */
+    #submitView {
+      min-height: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 3rem 1.5rem 2rem;
+    }
+    .submit-wrap { width: 100%; max-width: 560px; }
+    .sun { width: 84px; height: 84px; display: block; margin-bottom: 1.25rem; }
+    h1 {
+      font-family: var(--display);
+      font-weight: 400;
+      font-size: clamp(2.2rem, 6vw, 3.4rem);
+      line-height: 1.08;
+      margin: 0 0 0.75rem;
+      letter-spacing: -0.01em;
+    }
+    .lede { color: var(--grey); margin: 0 0 1.75rem; max-width: 46ch; }
+
+    .card {
+      background: var(--white);
+      border: 1px solid var(--rule);
+      border-radius: 24px;
+      padding: 1.25rem;
+    }
+    label.sr { position: absolute; left: -9999px; }
+    textarea {
+      width: 100%;
+      min-height: 120px;
+      resize: vertical;
+      border: 0;
+      outline: 0;
+      font: inherit;
+      font-size: 1.1rem;
+      line-height: 1.45;
+      color: var(--ink);
+      background: transparent;
+    }
+    textarea::placeholder { color: #8a97a3; }
+    .card-foot {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      border-top: 1px solid var(--rule);
+      padding-top: 1rem;
+      margin-top: 0.5rem;
+    }
+    .count { color: var(--grey); font-size: 0.9rem; }
+    .status { min-height: 1.6rem; margin: 0.9rem 0 0; font-weight: 500; }
+    .status.ok { color: var(--deep-sky); }
+    .status.err { color: #a12a2a; }
+
+    .below { margin-top: 1.5rem; display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; }
+    .mock-note { margin-top: 2.5rem; font-size: 0.85rem; color: var(--grey); }
+
+    /* ---------- Answers view ---------- */
+    #answersView { height: 100%; display: flex; flex-direction: column; }
+    .answers-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      padding: 1rem 1.25rem;
+      background: var(--white);
+      border-bottom: 1px solid var(--rule);
+    }
+    .answers-title { font-family: var(--display); font-size: 1.4rem; margin: 0; line-height: 1.1; }
+    .answers-count { color: var(--grey); font-size: 0.9rem; }
+    .field {
+      position: relative;
+      flex: 1;
+      overflow: hidden;
+      background: var(--mid-sky);
+      background: linear-gradient(0deg, var(--mid-sky), var(--mid-sky));
+    }
+    .empty {
+      position: absolute; inset: 0;
+      display: grid; place-content: center; text-align: center;
+      padding: 2rem; color: var(--ink);
+      font-family: var(--display); font-size: 1.6rem;
+    }
+    .bubble {
+      position: absolute; left: 0; top: 0;
+      max-width: min(250px, 72vw);
+      will-change: transform;
+    }
+    .bubble .body {
+      padding: 0.9rem 1.15rem;
+      border-radius: 22px;
+      font-size: 1rem;
+      line-height: 1.35;
+      box-shadow: 0 2px 10px rgba(31, 111, 168, 0.14);
+      animation: pop 0.45s cubic-bezier(.2,.9,.3,1.2) both;
+      overflow-wrap: anywhere;
+    }
+    .body.v0 { background: var(--white); color: var(--ink); }
+    .body.v1 { background: var(--pale-sky); color: var(--ink); border: 1px solid var(--rule); }
+    .body.v2 { background: var(--deep-sky); color: var(--white); }
+    @keyframes pop { from { opacity: 0; transform: scale(0.6); } to { opacity: 1; transform: scale(1); } }
+
+    /* Reduced motion: no drifting, answers sit in a wrapped layout */
+    .field.static { overflow: auto; display: flex; flex-wrap: wrap; align-content: flex-start; gap: 0.9rem; padding: 1.25rem; }
+    .field.static .bubble { position: static; }
+    .field.static .body { animation: none; }
+    @media (prefers-reduced-motion: reduce) { .bubble .body { animation: none; } }
+  </style>
+</head>
+<body>
+
+  <!-- ===== Submit page ===== -->
+  <main id="submitView">
+    <div class="submit-wrap">
+      <svg class="sun" viewBox="0 0 100 100" role="img" aria-label="A smiling sun">
+        <g stroke="#F88C00" stroke-width="6" stroke-linecap="round">
+          <line x1="50" y1="6" x2="50" y2="16"/><line x1="50" y1="84" x2="50" y2="94"/>
+          <line x1="6" y1="50" x2="16" y2="50"/><line x1="84" y1="50" x2="94" y2="50"/>
+          <line x1="19" y1="19" x2="26" y2="26"/><line x1="74" y1="74" x2="81" y2="81"/>
+          <line x1="81" y1="19" x2="74" y2="26"/><line x1="26" y1="74" x2="19" y2="81"/>
+        </g>
+        <circle cx="50" cy="50" r="26" fill="#F88C00"/>
+        <circle cx="41" cy="44" r="3.2" fill="#1A1A1A"/>
+        <circle cx="59" cy="44" r="3.2" fill="#1A1A1A"/>
+        <path d="M38 55 Q50 68 62 55" fill="none" stroke="#1A1A1A" stroke-width="4" stroke-linecap="round"/>
+      </svg>
+
+      <h1>What did you notice today that made you smile?</h1>
+      <p class="lede">Small things count. Share one and see what everyone else noticed.</p>
+
+      <div class="card">
+        <label class="sr" for="answerInput">Your answer</label>
+        <textarea id="answerInput" maxlength="140" placeholder="The dog next door waiting at the window…"></textarea>
+        <div class="card-foot">
+          <span class="count" id="count" aria-live="polite">0 / 140</span>
+          <button class="btn btn-primary" id="submitBtn" type="button">Share your answer</button>
+        </div>
+      </div>
+      <p class="status" id="status" role="status"></p>
+
+      <div class="below">
+        <button class="btn btn-ghost" id="showBtn" type="button">Show me the answers</button>
+      </div>
+
+      <p class="mock-note" id="mockNote" hidden>Mockup: answers are sample data and are not saved anywhere yet.</p>
+    </div>
+  </main>
+
+  <!-- ===== Answers page ===== -->
+  <section id="answersView" hidden aria-label="Happy answers">
+    <div class="answers-bar">
+      <div>
+        <h2 class="answers-title">What made everyone smile</h2>
+        <span class="answers-count" id="answersCount"></span>
+      </div>
+      <button class="btn btn-ghost" id="backBtn" type="button">Go back to submission page</button>
+    </div>
+    <div class="field" id="field"></div>
+  </section>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="config.js"></script>
+<script>
+  /* ============================================================
+     CONFIG
+     ============================================================ */
+  const MOCK_MODE = false;
+  const sb = supabase.createClient(HAPPY_CONFIG.SUPABASE_URL, HAPPY_CONFIG.SUPABASE_ANON_KEY);
+
+  /* ============================================================
+     DATA LAYER
+     ============================================================ */
+  async function saveAnswer(text) {
+    const { error } = await sb.from("happy_answers").insert({ answer: text });
+    if (error) throw error;
+  }
+
+  async function fetchAnswers() {
+    const { data, error } = await sb
+      .from("happy_answers")
+      .select("entry_id, answer, created_date")
+      .order("created_date", { ascending: false })
+      .limit(30);
+    if (error) throw error;
+    return data;
+  }
+
+  /* ============================================================
+     UI
+     ============================================================ */
+  const $ = id => document.getElementById(id);
+  const input = $("answerInput"), count = $("count"), statusEl = $("status");
+  const submitBtn = $("submitBtn"), showBtn = $("showBtn"), backBtn = $("backBtn");
+  const submitView = $("submitView"), answersView = $("answersView"), field = $("field");
+  const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+
+  $("mockNote").hidden = !MOCK_MODE;
+
+  input.addEventListener("input", () => { count.textContent = input.value.length + " / 140"; });
+  input.addEventListener("keydown", e => { if ((e.metaKey || e.ctrlKey) && e.key === "Enter") submitBtn.click(); });
+
+  function setStatus(msg, kind) { statusEl.textContent = msg; statusEl.className = "status " + (kind || ""); }
+
+  submitBtn.addEventListener("click", async () => {
+    const text = input.value.trim();
+    if (!text) { setStatus("Write something that made you smile first.", "err"); input.focus(); return; }
+    submitBtn.disabled = true; submitBtn.textContent = "Sharing…"; setStatus("");
+    try {
+      await saveAnswer(text);
+      input.value = ""; count.textContent = "0 / 140";
+      setStatus("Shared. Your smile is in the sky.", "ok");
+    } catch (err) {
+      setStatus("Your answer didn't save. Check your connection and try again.", "err");
+    } finally {
+      submitBtn.disabled = false; submitBtn.textContent = "Share your answer";
+    }
+  });
+
+  showBtn.addEventListener("click", async () => {
+    showBtn.disabled = true; showBtn.textContent = "Loading…";
+    try {
+      const rows = await fetchAnswers();
+      submitView.hidden = true; answersView.hidden = false;
+      $("answersCount").textContent = rows.length + (rows.length === 1 ? " smile" : " smiles") + " so far";
+      layout(rows);
+    } catch (err) {
+      setStatus("Couldn't load the answers. Try again in a moment.", "err");
+    } finally {
+      showBtn.disabled = false; showBtn.textContent = "Show me the answers";
+    }
+  });
+
+  backBtn.addEventListener("click", () => {
+    stop();
+    answersView.hidden = true; submitView.hidden = false;
+    setStatus(""); input.focus();
+  });
+
+  /* ============================================================
+     FLOATING ANSWERS
+     ============================================================ */
+  let bubbles = [], raf = 0, running = false;
+
+  function place(b) { b.el.style.transform = "translate(" + b.x + "px," + b.y + "px)"; }
+
+  function layout(rows) {
+    stop();
+    field.replaceChildren();
+    field.classList.toggle("static", reduceMotion.matches);
+
+    if (!rows.length) {
+      const e = document.createElement("div");
+      e.className = "empty";
+      e.textContent = "No answers yet. Go back and share the first one.";
+      field.appendChild(e);
+      return;
+    }
+
+    bubbles = rows.map((row, i) => {
+      const el = document.createElement("div");
+      el.className = "bubble";
+      const body = document.createElement("div");
+      body.className = "body v" + (i % 3);
+      body.textContent = row.answer;           // textContent keeps user input safe
+      body.style.animationDelay = (i * 70) + "ms";
+      el.appendChild(body);
+      field.appendChild(el);
+      return { el, w: 0, h: 0, x: 0, y: 0, vx: 0, vy: 0, paused: false };
+    });
+
+    if (reduceMotion.matches) return;
+
+    const W = field.clientWidth, H = field.clientHeight;
+    bubbles.forEach(b => {
+      b.w = b.el.offsetWidth; b.h = b.el.offsetHeight;
+      b.x = Math.random() * Math.max(1, W - b.w);
+      b.y = Math.random() * Math.max(1, H - b.h);
+      const speed = 0.25 + Math.random() * 0.35, a = Math.random() * Math.PI * 2;
+      b.vx = Math.cos(a) * speed; b.vy = Math.sin(a) * speed;
+      b.el.addEventListener("pointerenter", () => { b.paused = true; });
+      b.el.addEventListener("pointerleave", () => { b.paused = false; });
+      place(b);
+    });
+    running = true;
+    raf = requestAnimationFrame(tick);
+  }
+
+  function stop() { running = false; cancelAnimationFrame(raf); bubbles = []; }
+
+  function tick() {
+    if (!running) return;
+    const W = field.clientWidth, H = field.clientHeight;
+
+    for (const b of bubbles) {
+      if (b.paused) continue;
+      b.x += b.vx; b.y += b.vy;
+      if (b.x < 0) { b.x = 0; b.vx = Math.abs(b.vx); }
+      if (b.x > W - b.w) { b.x = Math.max(0, W - b.w); b.vx = -Math.abs(b.vx); }
+      if (b.y < 0) { b.y = 0; b.vy = Math.abs(b.vy); }
+      if (b.y > H - b.h) { b.y = Math.max(0, H - b.h); b.vy = -Math.abs(b.vy); }
+    }
+
+    // gentle separation so answers stay readable
+    for (let i = 0; i < bubbles.length; i++) {
+      for (let j = i + 1; j < bubbles.length; j++) {
+        const a = bubbles[i], b = bubbles[j];
+        const dx = (a.x + a.w / 2) - (b.x + b.w / 2);
+        const dy = (a.y + a.h / 2) - (b.y + b.h / 2);
+        const ox = (a.w + b.w) / 2 - Math.abs(dx);
+        const oy = (a.h + b.h) / 2 - Math.abs(dy);
+        if (ox <= 0 || oy <= 0) continue;
+        const wa = a.paused ? 0 : 1, wb = b.paused ? 0 : 1, t = wa + wb;
+        if (!t) continue;
+        if (ox < oy) {
+          const s = Math.sign(dx) || 1;
+          a.x += s * ox * wa / t; b.x -= s * ox * wb / t;
+          if (!a.paused) a.vx = Math.abs(a.vx) * s;
+          if (!b.paused) b.vx = -Math.abs(b.vx) * s;
+        } else {
+          const s = Math.sign(dy) || 1;
+          a.y += s * oy * wa / t; b.y -= s * oy * wb / t;
+          if (!a.paused) a.vy = Math.abs(a.vy) * s;
+          if (!b.paused) b.vy = -Math.abs(b.vy) * s;
+        }
+      }
+    }
+
+    for (const b of bubbles) place(b);
+    raf = requestAnimationFrame(tick);
+  }
+</script>
+</body>
+</html>
